@@ -14,7 +14,7 @@ This is a set of Terraform files used to deploy an Azure Kubernetes Cluster with
 - pool1 is a linux node pool (it is mandatory because of kube system pods)
 - pool2 is a windows server 2019 node pool with a taint
 - System Managed Identities are used instead of Service Principal
-- SKU of K8S Managed Control Plane
+- Choice of SKU (Free or Paid) for Azure Kubernetes Service (Control Plane)
 
 These Terraform files can be used to deploy the following Azure components :
 
@@ -33,8 +33,8 @@ On Kubernetes, these Terraform files will :
 __Prerequisites :__
 
 - An Azure Subscription with enough privileges (create RG, AKS...)
-- Azure CLI 2.1.0 : <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest>
-   And you need to activate features that are still in preview : <https://github.com/squasta/AzureKubernetesService-Labs/blob/master/0-PrepareAzure.txt>
+- Azure CLI 2.8.0 or >: <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest>
+   And you need to activate features that are still in preview and add extension aks-preview to azure CLI (az extension add --name aks-preview)
 - Terraform CLI 0.12.20 or > : <https://www.terraform.io/downloads.html>
 - Helm CLI 3.1.1 or > : <https://helm.sh/docs/intro/install/> if you need to test Helm charts
 
@@ -42,8 +42,8 @@ __To deploy this infrastructure :__
 
 1. Log to your Azure subscription (az login)
 2. Create an Azure Key Vault and create all secrets defined in datasource.tf
-3. Define the value of each variable in .tf and .tfvars files
-4. Initialize your terraform deployment : terraform init
+3. Define the value of each variable in .tf and/or .tfvars files
+4. Initialize your terraform deployment : `terraform init`
 5. Plan your terraform deployment : `terraform plan --var-file=myconf.tfvars`
 6. Apply your terraform deployment : `terraform apply --var-file=myconf.tfvars`
 
