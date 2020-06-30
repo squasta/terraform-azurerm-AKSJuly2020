@@ -9,7 +9,9 @@ resource "azurerm_kubernetes_cluster" "Terra_aks" {
   kubernetes_version         = var.kubernetes_version
   enable_pod_security_policy = var.defaultpool-securitypolicy
   sku_tier                   = var.sku-controlplane
-  depends_on                 = [azurerm_log_analytics_workspace.Terra-LogsWorkspace]
+  private_cluster_enabled    = var.enable-privatecluster
+
+  depends_on = [azurerm_log_analytics_workspace.Terra-LogsWorkspace]
 
   default_node_pool {
     name                = var.defaultpool-name
@@ -38,12 +40,12 @@ resource "azurerm_kubernetes_cluster" "Terra_aks" {
   }
 
   network_profile {
-    network_plugin     = "azure"                  # Can be kubenet (Basic Network) or azure (=Advanced Network)
-    network_policy     = var.networkpolicy_plugin # Options are calico or azure - only if network plugin is set to azure
-    dns_service_ip     = "172.16.0.10"            # Required when network plugin is set to azure, must be in the range of service_cidr and above 1
+    network_plugin = "azure" # Can be kubenet (Basic Network) or azure (=Advanced Network)
+    # network_policy     = var.networkpolicy_plugin # Options are calico or azure - only if network plugin is set to azure
+    dns_service_ip     = "10.0.0.10" # Required when network plugin is set to azure, must be in the range of service_cidr and above 1
     docker_bridge_cidr = "172.17.0.1/16"
-    service_cidr       = "172.16.0.0/16" # Must not overlap any address from the VNet
-    load_balancer_sku  = "Standard"      # sku can be basic or standard. Here it an AKS cluster with AZ support so Standard SKU is mandatory
+    service_cidr       = "10.0.0.0/16" # Must not overlap any address from the VNet
+    load_balancer_sku  = "Standard"    # sku can be basic or standard. Here it an AKS cluster with AZ support so Standard SKU is mandatory
   }
 
   addon_profile {
@@ -57,6 +59,19 @@ resource "azurerm_kubernetes_cluster" "Terra_aks" {
     # Enable HTTP Application routing (Ingress for Test and Dev only)
     http_application_routing {
       enabled = false
+    }
+
+    # Enable Azure Container Instance as a Virtual Kubelet
+    aci_connector_linux {
+      enabled = true
+      # https://github.com/terraform-providers/terraform-provider-azurerm/issues/3998
+      subnet_name = azurerm_subnet.Terra_aks_aci_subnet.name
+    }
+
+    # Enable Azure Policy
+    # cf. https://docs.microsoft.com/en-us/azure/governance/policy/concepts/policy-for-kubernetes
+    azure_policy {
+      enabled = var.enable-AzurePolicy
     }
   }
 
@@ -79,20 +94,20 @@ resource "azurerm_kubernetes_cluster" "Terra_aks" {
 }
 
 # AKS Agent node-pool cf. https://www.terraform.io/docs/providers/azurerm/r/kubernetes_cluster_node_pool.html
-resource "azurerm_kubernetes_cluster_node_pool" "Terra-AKS-NodePools" {
-  kubernetes_cluster_id = azurerm_kubernetes_cluster.Terra_aks.id
-  name                  = var.windowspool-name
-  depends_on            = [azurerm_kubernetes_cluster.Terra_aks]
-  node_count            = var.windowspool-nodecount     # static number or initial number of nodes. Must be between 1 to 100
-  enable_auto_scaling   = var.winpool-enableautoscaling # use this parameter if you want an AKS Cluster with Node autoscale. Need also min_count and max_count
-  min_count             = var.winpool-mincount          # minimum number of nodes with AKS Autoscaler
-  max_count             = var.winpool-maxcount          # maximum number of nodes with AKS Autoscaler
-  vm_size               = var.windowspool-vmsize
-  availability_zones    = var.winpool-availabilityzones # example : [1, 2, 3]
-  os_type               = var.windowspool-ostype        # example :linux, windows
-  os_disk_size_gb       = var.windowspool-osdisksizegb
-  # max_pods              = var.winpool-maxpods # between 30 and 250. BUT must 30 max for Windows Node
-  vnet_subnet_id = azurerm_subnet.Terra_aks_subnet.id
-  node_taints    = var.winpool-nodetaints # cf. https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-}
+# resource "azurerm_kubernetes_cluster_node_pool" "Terra-AKS-NodePools" {
+#   kubernetes_cluster_id = azurerm_kubernetes_cluster.Terra_aks.id
+#   name                  = var.windowspool-name
+#   depends_on            = [azurerm_kubernetes_cluster.Terra_aks]
+#   node_count            = var.windowspool-nodecount     # static number or initial number of nodes. Must be between 1 to 100
+#   enable_auto_scaling   = var.winpool-enableautoscaling # use this parameter if you want an AKS Cluster with Node autoscale. Need also min_count and max_count
+#   min_count             = var.winpool-mincount          # minimum number of nodes with AKS Autoscaler
+#   max_count             = var.winpool-maxcount          # maximum number of nodes with AKS Autoscaler
+#   vm_size               = var.windowspool-vmsize
+#   availability_zones    = var.winpool-availabilityzones # example : [1, 2, 3]
+#   os_type               = var.windowspool-ostype        # example :linux, windows
+#   os_disk_size_gb       = var.windowspool-osdisksizegb
+#   # max_pods              = var.winpool-maxpods # between 30 and 250. BUT must 30 max for Windows Node
+#   vnet_subnet_id = azurerm_subnet.Terra_aks_subnet.id
+#   node_taints    = var.winpool-nodetaints # cf. https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+# }
 

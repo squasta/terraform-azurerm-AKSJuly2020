@@ -21,8 +21,9 @@ These Terraform files can be used to deploy the following Azure components :
 - An Azure Resource Group
 - An Azure Kubernetes Services Cluster with 1 node pool running Linux 
 - An additionnal node pool (pool2) with Windows Server 2019 nodes
+- A linux virtual node (Azure Container Instance) through a Virtual Kubelet
 - An Azure Load Balancer Standard SKU
-- A Virtual Network with it Subnets (subnet for AKS Pods, subnets for AzureBastion and AzureFirewall/NVA if needed)
+- A Virtual Network with it Subnets (subnet for AKS Pods, subnets for AzureBastion and AzureFirewall/NVA if needed, Pods running in ACI through Virtual Kubelet)
 - An Azure Log Analytics Workspace + Containers solutions
 
 On Kubernetes, these Terraform files will :
@@ -35,7 +36,7 @@ __Prerequisites :__
 - An Azure Subscription with enough privileges (create RG, AKS...)
 - Azure CLI 2.8.0 or >: <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest>
    And you need to activate features that are still in preview and add extension aks-preview to azure CLI (az extension add --name aks-preview)
-- Terraform CLI 0.12.20 or > : <https://www.terraform.io/downloads.html>
+- Terraform CLI 0.12.24 or > : <https://www.terraform.io/downloads.html>
 - Helm CLI 3.1.1 or > : <https://helm.sh/docs/intro/install/> if you need to test Helm charts
 
 __To deploy this infrastructure :__

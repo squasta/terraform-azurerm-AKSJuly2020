@@ -45,6 +45,16 @@ variable "networkpolicy_plugin" {
   default = "azure"
 }
 
+variable "enable-privatecluster" {
+  type    = bool
+  default = false
+}
+
+variable "enable-AzurePolicy" {
+  type    = bool
+  default = false
+}
+
 
 # Linux nodes admin user name
 variable "admin_username" {
@@ -65,7 +75,7 @@ variable "windows_admin_username" {
 variable "kubernetes_version" {
   description = "Version of Kubernetes to deploy"
   type        = string
-  default     = "1.16.4"
+  default     = "1.16.9"
 }
 
 
