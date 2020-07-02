@@ -26,6 +26,16 @@ resource "azurerm_subnet" "Terra_aks_subnet" {
   address_prefixes     = ["10.240.0.0/16"]
 }
 
+# Role Assignment to give AKS the access to AKS subnet
+# cf. https://docs.microsoft.com/en-us/azure/aks/kubernetes-service-principal#delegate-access-to-other-azure-resources
+# cf. https://docs.microsoft.com/en-us/azure/aks/kubernetes-service-principal#networking
+resource "azurerm_role_assignment" "Terra-aks-subnet-role" {
+  scope                = azurerm_subnet.Terra_aks_subnet.id
+  role_definition_name = "Contributor"
+  principal_id         = azurerm_kubernetes_cluster.Terra_aks.kubelet_identity.0.object_id
+}
+
+
 resource "azurerm_subnet" "Terra_aks_bastion_subnet" {
   name                 = "AzureBastionSubnet"
   resource_group_name  = azurerm_resource_group.Terra_aks_rg.name
@@ -55,6 +65,22 @@ resource "azurerm_subnet" "Terra_aks_aci_subnet" {
 
 }
 
+# Role Assignment to Grant AKS cluster access to join ACI subnet
+resource "azurerm_role_assignment" "Terra-aks-aci_subnet" {
+  scope                = azurerm_subnet.Terra_aks_aci_subnet.id
+  role_definition_name = "Contributor"
+  principal_id         = azurerm_kubernetes_cluster.Terra_aks.kubelet_identity.0.object_id
+}
+
+# Role Assignment to Grant ACI-connector Pod permission Contributor on ACI Subnet
+# resource "azurerm_role_assignment" "Terra-aci-aci_subnet" {
+#   scope                = azurerm_subnet.Terra_aks_aci_subnet.id
+#   role_definition_name = "Contributor"
+#   principal_id         = azurerm_kubernetes_cluster.Terra_aks.aciConnectorLinux
+# }
+
+
+
 ###################
 # AppGateway Subnet
 
@@ -66,13 +92,7 @@ resource "azurerm_subnet" "Terra_aks_appgw_subnet" {
 }
 
 
-
-# resource "azurerm_role_assignment" "acr_role" {
-#   scope                = var.acr_id
-#   role_definition_name = "AcrPull"
-#   principal_id         = azurerm_kubernetes_cluster.aks.kubelet_identity.0.object_id
-# }
-
+# Not usefull - to remove later
 
 #Role Assignment to give AKS the access to VNET - Required for Advanced Networking
 # resource "azurerm_role_assignment" "aks-vnet-role" {
