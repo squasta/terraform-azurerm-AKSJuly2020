@@ -111,3 +111,11 @@ resource "azurerm_kubernetes_cluster" "Terra_aks" {
 #   node_taints    = var.winpool-nodetaints # cf. https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
 # }
 
+# Role Assignment to give AKS managed identity Contributor permissions on the ACI resource group - Required for Virtual Kubelet
+# cf. https://docs.microsoft.com/en-us/azure/aks/kubernetes-service-principal#delegate-access-to-other-azure-resources
+# cf. https://docs.microsoft.com/en-us/azure/aks/kubernetes-service-principal#azure-container-instances 
+resource "azurerm_role_assignment" "Terra-aks-aci-role" {
+  scope                = azurerm_resource_group.Terra_aks_rg.id
+  role_definition_name = "Contributor"
+  principal_id         = azurerm_kubernetes_cluster.Terra_aks.kubelet_identity.0.object_id
+}

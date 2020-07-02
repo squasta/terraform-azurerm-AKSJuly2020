@@ -1,5 +1,5 @@
 
-#Creating the AKS Vnet
+# Defining the AKS Virtual Network
 
 resource "azurerm_virtual_network" "Terra_aks_vnet" {
   name                = var.aks_vnet_name
@@ -7,6 +7,17 @@ resource "azurerm_virtual_network" "Terra_aks_vnet" {
   location            = azurerm_resource_group.Terra_aks_rg.location
   address_space       = ["10.0.0.0/8"]
 }
+
+# Role Assignment to give AKS the access to VNET - Required for Advanced Networking
+# cf. https://docs.microsoft.com/en-us/azure/aks/kubernetes-service-principal#delegate-access-to-other-azure-resources
+# cf. https://docs.microsoft.com/en-us/azure/aks/kubernetes-service-principal#networking
+resource "azurerm_role_assignment" "Terra-aks-vnet-role" {
+  scope                = azurerm_virtual_network.Terra_aks_vnet.id
+  role_definition_name = "Contributor"
+  principal_id         = azurerm_kubernetes_cluster.Terra_aks.kubelet_identity.0.object_id
+}
+
+# Defining subnets Virtual Network
 
 resource "azurerm_subnet" "Terra_aks_subnet" {
   name                 = "aks_subnet"
@@ -55,6 +66,12 @@ resource "azurerm_subnet" "Terra_aks_appgw_subnet" {
 }
 
 
+
+# resource "azurerm_role_assignment" "acr_role" {
+#   scope                = var.acr_id
+#   role_definition_name = "AcrPull"
+#   principal_id         = azurerm_kubernetes_cluster.aks.kubelet_identity.0.object_id
+# }
 
 
 #Role Assignment to give AKS the access to VNET - Required for Advanced Networking
